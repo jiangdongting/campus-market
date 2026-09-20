@@ -1,0 +1,3 @@
+USE Company;
+SELECT * FROM tb_emp WHERE DeptId IS NULL;
+SELECT DISTINCT Name FROM tb_emp;
