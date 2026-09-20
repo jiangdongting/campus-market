@@ -27,6 +27,7 @@
 - 订单取消、完成
 - Redis 商品详情缓存
 - 统一返回结果与全局异常处理
+
 ## 项目亮点
 
 - 使用 JWT 实现登录鉴权，并通过拦截器统一校验用户身份
@@ -52,6 +53,8 @@ src/main/java/org/example/campusmarket
 ├── exception       全局异常处理
 ├── util            JWT、Redis 等工具类
 └── common          Result 统一返回结果
+```
+
 ## 核心接口
 
 ### 用户模块
@@ -94,6 +97,7 @@ src/main/java/org/example/campusmarket
 | GET | /orders/{orderId} | 订单详情 |
 | PUT | /orders/{orderId}/cancel | 取消订单 |
 | PUT | /orders/{orderId}/complete | 完成订单 |
+
 ## 项目运行
 
 ### 1. 环境要求
@@ -105,10 +109,44 @@ src/main/java/org/example/campusmarket
 
 ### 2. 创建数据库
 
-创建数据库：
-
 ```sql
 CREATE DATABASE campus_market;
+```
+
+### 3. 配置环境变量
+
+项目中的数据库密码和 JWT 密钥通过环境变量配置：
+
+```text
+CAMPUS_DB_PASSWORD=你的数据库密码
+CAMPUS_JWT_SECRET=你的JWT密钥
+```
+
+`application.properties` 中使用：
+
+```properties
+spring.datasource.password=${CAMPUS_DB_PASSWORD}
+jwt.secret=${CAMPUS_JWT_SECRET}
+```
+
+### 4. 启动 Redis
+
+确保本地 Redis 服务已经启动。
+
+### 5. 启动项目
+
+运行：
+
+```text
+CampusMarketApplication
+```
+
+项目默认运行地址：
+
+```text
+http://localhost:8083
+```
+
 ## 数据库表说明
 
 ### user 用户表
@@ -145,7 +183,7 @@ CREATE DATABASE campus_market;
 - product_id：商品ID
 - created_at：收藏时间
 
-并通过唯一约束避免同一个用户重复收藏同一个商品。
+通过唯一约束避免同一个用户重复收藏同一个商品。
 
 ### orders 订单表
 
@@ -165,3 +203,45 @@ CREATE DATABASE campus_market;
 - 0：待完成
 - 1：已完成
 - 2：已取消
+
+## 核心业务流程
+
+### 登录流程
+
+用户提交账号密码  
+→ 后端校验用户信息  
+→ 生成 JWT Token  
+→ 前端保存 Token  
+→ 后续请求携带 Token  
+→ 拦截器校验 Token  
+→ 获取当前用户身份
+
+### 商品流程
+
+用户登录  
+→ 发布商品  
+→ 商品写入 MySQL  
+→ 查询商品详情时优先读取 Redis  
+→ Redis 无数据时查询 MySQL  
+→ 将商品数据写入 Redis 缓存
+
+### 收藏流程
+
+用户登录  
+→ 收藏商品  
+→ 后端校验是否重复收藏  
+→ 写入 favorite 表  
+→ 查询收藏列表时关联商品信息
+
+### 订单流程
+
+买家选择商品  
+→ 创建订单  
+→ 保存商品价格快照  
+→ 买家确认完成订单  
+→ 更新订单状态  
+→ 同时将商品状态改为已售
+
+## 项目说明
+
+本项目主要用于学习和实践 Java Web 后端开发流程，覆盖用户认证、商品管理、收藏、订单、缓存、异常处理和数据库访问等常见后端业务场景。
